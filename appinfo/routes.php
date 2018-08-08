@@ -34,5 +34,6 @@ return [
     ],
 	'ocs' => [
 		['name' => 'api#info', 'url' => '/api/v1/info', 'verb' => 'GET'],
+		['name' => 'prometheus#info', 'url' => '/api/v1/prometheus', 'verb' => 'GET'],
 	]
 ];
