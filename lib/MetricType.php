@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (c) 2016 Bjoern Schiessle <bjoern@schiessle.org>
+ * @copyright Copyright (c) 2018 Matthias Kesler <krombel@krombel.de>
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -19,21 +19,19 @@
  *
  */
 
-/**
- * Create your routes in here. The name is the lowercase name of the controller
- * without the controller part, the stuff after the hash is the method.
- * e.g. page#index -> OCA\ServerInfo\Controller\PageController->index()
- *
- * The controller class has to be registered in the application.php file since
- * it's instantiated in there
- */
+namespace OCA\ServerInfo;
 
-return [
-    'routes' => [
-	   ['name' => 'page#update', 'url' => '/update', 'verb' => 'GET'],
-    ],
-	'ocs' => [
-		['name' => 'api#info', 'url' => '/api/v1/info', 'verb' => 'GET'],
-		['name' => 'api#prometheus', 'url' => '/api/v1/prometheus', 'verb' => 'GET'],
-	]
-];
+abstract class MetricType {
+	const JSON = 0;
+	const Prometheus = 1;
+
+	static public function parse($input) {
+        if (!isset($input)) {
+            return JSON;
+        }
+        if (strcasecmp($input, "prometheus")) {
+            return Prometheus;
+        }
+        return JSON
+	}
+}

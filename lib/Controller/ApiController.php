@@ -23,7 +23,9 @@
 namespace OCA\ServerInfo\Controller;
 
 use OCA\ServerInfo\DatabaseStatistics;
+use OCA\ServerInfo\MetricType;
 use OCA\ServerInfo\PhpStatistics;
+use OCA\ServerInfo\PrometheusResponse;
 use OCA\ServerInfo\SessionStatistics;
 use OCA\ServerInfo\ShareStatistics;
 use OCA\ServerInfo\StorageStatistics;
@@ -51,6 +53,9 @@ class ApiController extends OCSController {
 
 	/** @var SessionStatistics */
 	private $sessionStatistics;
+
+	/** @var int */
+	private $type;
 
 	/**
 	 * ApiController constructor.
@@ -81,33 +86,36 @@ class ApiController extends OCSController {
 		$this->databaseStatistics = $databaseStatistics;
 		$this->shareStatistics = $shareStatistics;
 		$this->sessionStatistics = $sessionStatistics;
+		$this->type = MetricType::parse($request->getParam("type"));
 	}
 
 	/**
 	 * @NoCSRFRequired
 	 *
-	 * @return DataResponse
+	 * @return Response
 	 */
 	public function info() {
-
-		return new DataResponse(
-			[
-				'nextcloud' =>
-					[
-						'system' => $this->systemStatistics->getSystemStatistics(),
-						'storage' => $this->storageStatistics->getStorageStatistics(),
-						'shares' => $this->shareStatistics->getShareStatistics()
-					],
-				'server' =>
-					[
-						'webserver' => $this->getWebserver(),
-						'php' => $this->phpStatistics->getPhpStatistics(),
-						'database' => $this->databaseStatistics->getDatabaseStatistics()
-					],
-				'activeUsers' => $this->sessionStatistics->getSessionStatistics()
-			]
-		);
-
+		$tmpData = [
+			'nextcloud' =>
+				[
+					'system' => $this->systemStatistics->getSystemStatistics(),
+					'storage' => $this->storageStatistics->getStorageStatistics(),
+					'shares' => $this->shareStatistics->getShareStatistics()
+				],
+			'server' =>
+				[
+					'php' => $this->phpStatistics->getPhpStatistics(),
+					'database' => $this->databaseStatistics->getDatabaseStatistics()
+				],
+			'activeUsers' => $this->sessionStatistics->getSessionStatistics()
+		];
+		if ($this->type == MetricType::Prometheus) {
+			// prometheus cannot handle strings
+			return new PrometheusResponse($tmpData)
+		} else {
+			$tmpData["server"]["webserver"] = $this->getWebserver(),
+			return new DataResponse($tmpData);
+		}
 	}
 
 	/**
